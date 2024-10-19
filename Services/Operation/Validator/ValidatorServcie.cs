@@ -1,6 +1,7 @@
 ﻿using QuizApp.Model.Domain;
 using QuizApp.Model.DTO;
 using QuizApp.Model.DTO.External;
+using QuizApp.Model.DTO.External.Resquest;
 using QuizApp.Services.Cache;
 using QuizApp.Services.ConcreteStrategies.MultipleChoice;
 using QuizApp.Services.ConcreteStrategies.MultipleChoice.Model.DTO;
@@ -27,47 +28,44 @@ namespace QuizApp.Services.Operation.Validator
 
 
         /// <summary>
-        /// receive answer are in the form of {format: questionFormat, answer: "serialized MultipleChoiceValidateAnswer"}
         /// </summary>
         /// <param name="receiveAnswer"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public ValidateResultDTO Validate(string receiveAnswer)
+        public ResponseValidatePayload Validate(string serializedReceivedAnswer)
         {
-            var answer = JsonSerializer.Deserialize<RestfulAnswer>(receiveAnswer);
-            var result = new ValidateResultDTO
+            var requestPayload = JsonSerializer
+                            .Deserialize<ResquestValidatePayload>(serializedReceivedAnswer);
+            // Check for missing detail
+            if (requestPayload == null
+                || !requestPayload.IsValid()) return ResponseValidatePayload.Default;
+
+            // get the data from cache
+            var answer = _informationCache.Get(requestPayload.CollectionId);
+            if (answer == null)
             {
-                QuesitonId = "",
-                Correct ="",
-                result = false
-            };
-            // mising Key parameter for operation
-            if (string.IsNullOrEmpty(answer.Answer) || string.IsNullOrEmpty(answer.CollectionId) || string.IsNullOrEmpty(answer.Type))
-            {
-                return result;
-            }
-            //get the correct answer
-            AnswersDTO answerDTO;
-            var validatedAnswers = _informationCache.Get(answer.CollectionId);
-            if (validatedAnswers == null)
-            {
-                validatedAnswers = _answerProvider.Get(answer.CollectionId);
-                _informationCache.Cache(validatedAnswers, answer.CollectionId);
+                answer = _answerProvider.Get(requestPayload.CollectionId);
+                _informationCache.Cache(answer, requestPayload.CollectionId);
             }
             // find the answer in the cache answer.
-            foreach (var serializedAns in validatedAnswers.Answer)
+            foreach (var serializedAnswer in answer.Answer)
             {
-                var validatedAnswer = JsonSerializer.Deserialize<MultipleChoiceAnswerDTO>(serializedAns);
+                // obtain the actual structure of the answer acording to its type
+                // aka multiple choice
+                var correctAnswer = JsonSerializer.Deserialize<MultipleChoiceAnswerDTO>(serializedAnswer);
+                var attempt = JsonSerializer.Deserialize<MultipleChoiceAnswerDTO>(requestPayload.Answer);
 
-                var attemptAnswer = JsonSerializer.Deserialize<MultipleChoiceAnswerDTO>(answer.Answer);
-                if (validatedAnswer != null && attemptAnswer != null &&
-                    new Guid(validatedAnswer.QuestionId).Equals(new Guid(attemptAnswer.QuestionId)))
+                if (correctAnswer != null && attempt != null && // match their id
+                    correctAnswer.QuestionId
+                        .Equals(attempt.QuestionId,
+                        StringComparison.OrdinalIgnoreCase))
                 {
+                    /// Inject the strategy and use that to validate the result
+                    /// BRUTEFORCE + NAIVE :: compare answer every request
                     var strategy = _serviceProvider.GetService(typeof(ValidateMultipleChoiceStrategy)) as IValidatingStrategy<MultipleChoiceAnswerDTO>;
-
                     if (strategy != null)
                     {
-                        return strategy.Validate(validatedAnswer, answer.Answer);
+                        return strategy.Validate(correctAnswer, requestPayload.Answer);
                     }
                     else
                     {
@@ -75,8 +73,7 @@ namespace QuizApp.Services.Operation.Validator
                     }
                 }
             }
-            ///@todo: implement the strategy pattern later when we add another question format
-            return result;
+            return ResponseValidatePayload.Default;
 
         }
     }

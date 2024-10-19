@@ -33,7 +33,7 @@ namespace QuizApp
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins", policy =>
-                    policy.AllowAnyOrigin()
+                    policy.WithOrigins("http://localhost:3000/*") // indicate that we only interact with the policy with URL
                           .AllowAnyMethod()
                           .AllowAnyHeader());
             });
@@ -67,9 +67,6 @@ namespace QuizApp
 
 
             var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            app.UseCors("AllowAllOrigins");
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

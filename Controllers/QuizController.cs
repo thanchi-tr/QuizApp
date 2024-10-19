@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using QuizApp.Model.DTO.External;
 using QuizApp.Services.ConcreteStrategies;
-using QuizApp.Services.ConcreteStrategies.MultipleChoice;
 using QuizApp.Services.Operation.Provider;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -11,7 +10,7 @@ namespace QuizApp.Controllers
     /// Handler the pathing for <only> request Quiz</only>
     /// </summary>
     [ApiController]
-    [Route("Api/Quiz")]
+    [Route("Api/Collections")]
     public class QuizController : ControllerBase
     {
         /// <summary>
@@ -20,7 +19,7 @@ namespace QuizApp.Controllers
         private InformationProvider<TestDTO, Model.Domain.Question> _infoProvider;
         public QuizController(InformationProvider<TestDTO, Model.Domain.Question> infoProvider) => _infoProvider = infoProvider;
 
-        [HttpGet("Get/{id}")]
+        [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Get quiz !",
             Description = "The quiz will include (0..n) question of multiple type ")]
         [SwaggerResponse(200, "<Questions> is configured into a format that suit for question type /n"  
@@ -39,7 +38,7 @@ namespace QuizApp.Controllers
         }
 
 
-        [HttpGet("Get/Question/Format")]
+        [HttpGet("Questions/Format")]
         [SwaggerOperation(Summary = "Get the supported question format",
             Description = "The quiz will include (0..n) question of multiple type ")]
         public IActionResult GetFormats()

@@ -1,4 +1,4 @@
-﻿using QuizApp.Model.DTO;
+﻿using QuizApp.Model.DTO.External;
 
 namespace QuizApp.Services.Operation.Validator
 {
@@ -9,6 +9,6 @@ namespace QuizApp.Services.Operation.Validator
         /// </summary>
         /// <param name="receiveAnswer"> String</param>
         /// <returns></returns>
-        public ValidateResultDTO Validate(string receiveAnswer);
+        public ResponseValidatePayload Validate(string receiveAnswer);
     }
 }

@@ -6,7 +6,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace QuizApp.Controllers
 {
     [ApiController]
-    [Route("Api/crud")]
+    [Route("Api/Collections")]
     public class CrudController : ControllerBase
     {
         public CrudController(ICRUDService<CollectionDTO> crudService)
@@ -16,7 +16,7 @@ namespace QuizApp.Controllers
 
         private ICRUDService<CollectionDTO> _crudService { get; set; }
 
-        [HttpGet("Collections/GetAll")]
+        [HttpGet("")]
         [SwaggerOperation(Summary = "Get quiz ID and tag !",
             Description = "the quiz only have the ID and name")]
         [SwaggerResponse(200, "<Quiz/CollectionDTO> will be return  /n"
@@ -27,7 +27,7 @@ namespace QuizApp.Controllers
             return Ok(_crudService.GetAll());
         }
 
-        [HttpPut("Collections/question/edit/{questionId}")]
+        [HttpPut("Collections/{CollectionID}/questions/{QuestionId}/Edit")]
         [SwaggerOperation(Summary = "Edit the  question data")]
         public IActionResult EditQuestion([FromBody] string questionDetail)
         {
@@ -38,8 +38,18 @@ namespace QuizApp.Controllers
             return Ok();
         }
 
-        [HttpPost("Collections/question/add")]
+        [HttpPost("Collections/{collectionId}/Questions/Add")]
         [SwaggerOperation(Summary = "Add the question to the exist data base")]
+        public IActionResult CreateQuestion([FromBody] string question, string collectionID)
+        {
+            if(string.IsNullOrEmpty(question))
+            {
+                return BadRequest();
+            }
+            //delegate the task to the service
+            var result =  _crudService.CreateQuestion(question, collectionID);
+            return Ok();
+        }
         
     }
 }
