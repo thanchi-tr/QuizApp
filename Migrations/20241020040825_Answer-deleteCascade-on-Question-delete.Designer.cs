@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuizApp.Data;
 
@@ -11,9 +12,11 @@ using QuizApp.Data;
 namespace QuizApp.Migrations
 {
     [DbContext(typeof(IdeaSpaceDBContext))]
-    partial class IdeaSpaceDBContextModelSnapshot : ModelSnapshot
+    [Migration("20241020040825_Answer-deleteCascade-on-Question-delete")]
+    partial class AnswerdeleteCascadeonQuestiondelete
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

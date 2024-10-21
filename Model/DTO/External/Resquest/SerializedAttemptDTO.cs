@@ -5,10 +5,9 @@ namespace QuizApp.Model.DTO.External.Resquest
     /// <summary>
     /// Data receive through a body of a https request
     /// </summary>
-    public class ResquestValidatePayload
+    public class SerializedAttemptDTO
     {
-        public string Type { get; set; }
-        public string CollectionId { get; set; }
+        public string Type { get; set; } 
         /// <summary>
         /// In the form of serialized( MultipleChoiceValidateAnswer)
         /// </summary>
@@ -20,7 +19,7 @@ namespace QuizApp.Model.DTO.External.Resquest
         /// <returns></returns>
         public bool IsValid()
         {
-            return !(string.IsNullOrEmpty(Answer) || string.IsNullOrEmpty(CollectionId) || string.IsNullOrEmpty(Type));
+            return !(string.IsNullOrEmpty(Answer) || string.IsNullOrEmpty(Type));
         }
     }
 }

@@ -32,20 +32,20 @@ namespace QuizApp.Services.Operation.Validator
         /// <param name="receiveAnswer"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public ResponseValidatePayload Validate(string serializedReceivedAnswer)
+        public ResponseValidatePayload Validate(string serializedReceivedAnswer, string collectionId, string questionId)
         {
             var requestPayload = JsonSerializer
-                            .Deserialize<ResquestValidatePayload>(serializedReceivedAnswer);
+                            .Deserialize<SerializedAttemptDTO>(serializedReceivedAnswer);
             // Check for missing detail
             if (requestPayload == null
                 || !requestPayload.IsValid()) return ResponseValidatePayload.Default;
 
             // get the data from cache
-            var answer = _informationCache.Get(requestPayload.CollectionId);
+            var answer = _informationCache.Get(collectionId);
             if (answer == null)
             {
-                answer = _answerProvider.Get(requestPayload.CollectionId);
-                _informationCache.Cache(answer, requestPayload.CollectionId);
+                answer = _answerProvider.Get(collectionId);
+                _informationCache.Cache(answer, collectionId);
             }
             // find the answer in the cache answer.
             foreach (var serializedAnswer in answer.Answer)

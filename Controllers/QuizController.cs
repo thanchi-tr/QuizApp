@@ -19,26 +19,26 @@ namespace QuizApp.Controllers
         private InformationProvider<TestDTO, Model.Domain.Question> _infoProvider;
         public QuizController(InformationProvider<TestDTO, Model.Domain.Question> infoProvider) => _infoProvider = infoProvider;
 
-        [HttpGet("{id}")]
+        [HttpGet("{Id}/Quiz")]
         [SwaggerOperation(Summary = "Get quiz !",
             Description = "The quiz will include (0..n) question of multiple type ")]
         [SwaggerResponse(200, "<Questions> is configured into a format that suit for question type /n"  
             , typeof(TestDTO))]
         [SwaggerResponse(404)]
-        public IActionResult GetQuiz([SwaggerParameter(Description = "Serialized GUID of the Quiz.")] String id)
+        public IActionResult GetQuiz([SwaggerParameter(Description = "Serialized GUID of the Quiz.")] String Id)
         {
-            if (string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(Id))
             {
                 return BadRequest("ID cannot be null or empty");
             }
-            var packet = _infoProvider.Get(id);
+            var packet = _infoProvider.Get(Id);
             return (packet != null)
                     ? Ok(packet)
                     : NotFound("Quiz not found");
         }
 
 
-        [HttpGet("Questions/Format")]
+        [HttpGet("Questions/Answer/Format")]
         [SwaggerOperation(Summary = "Get the supported question format",
             Description = "The quiz will include (0..n) question of multiple type ")]
         public IActionResult GetFormats()

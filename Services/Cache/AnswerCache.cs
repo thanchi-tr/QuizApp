@@ -19,12 +19,13 @@ namespace QuizApp.Services.Cache
             _cache = cache;
         }
 
+#pragma warning disable CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
         public AnswersDTO? Get(string id)
+#pragma warning restore CS8766 // Nullability of reference types in return type doesn't match implicitly implemented member (possibly because of nullability attributes).
         {
             if (!_cache.TryGetValue(id, out AnswersDTO? cachedProducts))
             {
                 return null;
-
             }
             return cachedProducts;
         }

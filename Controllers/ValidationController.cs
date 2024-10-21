@@ -9,7 +9,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace QuizApp.Controllers
 {
     [ApiController]
-    [Route("Api/Validate")]
+    [Route("Api/Validation")]
     public class ValidationController : ControllerBase
     {
         /// <summary>
@@ -35,26 +35,48 @@ namespace QuizApp.Controllers
         //            : NotFound("Quiz not found");
         //}
 
+        /// <summary>
+        /// @todo: the method need to be revised in order to avoid nested json (since i already serialized parent json 
+        /// in the payload. WHY: to avoid complication later on
+        /// </summary>
+        /// <param name="answer"></param>
+        /// <returns></returns>
+        [HttpPost("Collections/{CollectionId}/Questions/{QuestionId}/Answer")]
+        [SwaggerOperation(Summary = "Compare the attempt with validated answer!",
+            Description = "Compare the attempt according to its type.",
+            Tags = new[] { "Validate", "Player" })
+        ]
+        [SwaggerResponse(
+            200,
+            "Ok :: Successfully complete the comparison, compute result.", 
+            typeof(ResponseValidatePayload),
+            ContentTypes = new[] { "application/json" })]
+        [SwaggerResponse(
+            400,
+            "Bad Request:: Mising Url param.(client side error)", 
+            ContentTypes = new[] { "application/json" },
+            Type = typeof(string[])   
+        )]
+        [SwaggerResponse(
+            404,
+            "Not Found:: the [\"Collection\" and/or \"Question\"] does not exist",
+            ContentTypes = new[] { "application/json" },
+            Type = typeof(string[]) // notify client which resource is missing
 
-        [HttpPost("Answer")]
-        [SwaggerOperation(Summary = "Check answer!",
-            Description = "Request is in form of {Type: questionType, CollectionId: id of quiz, Answer: <Serialized string of actual strategy validation class>}")]
-        [SwaggerResponse(200, "<Answer> should be read in correspondent with Concrete format for the specific question type /n"
-            , typeof(ResponseValidatePayload))]
-        [SwaggerResponse(404)]
+        )]
         public IActionResult ValidateAnswer(
-            [SwaggerParameter(Description = "Serialized JSON object with <CollectionId>, <Type>, <an attempt>")]
-                [FromBody] string answer)
+            string CollectionId,
+            string QuestionId,
+            [FromBody]
+            [SwaggerParameter(
+                Required=true, 
+                Description = "Expected Payload:Serialized JSON object with <CollectionId>, <Type>, <an attempt>")]
+                 string serializedAttemptDTO)
         {
-            if (string.IsNullOrEmpty(answer)) {
-                return BadRequest();
-            }
-            ResponseValidatePayload result = _validateService.Validate(answer);
-            if (string.IsNullOrEmpty(result.QuesitonId)) // encounter error 
-            {
-                return BadRequest();
-            }
-            return Ok(result);
+            
+            ResponseValidatePayload result = _validateService.Validate(serializedAttemptDTO);
+            
+            return Ok();
         }   
     }
     

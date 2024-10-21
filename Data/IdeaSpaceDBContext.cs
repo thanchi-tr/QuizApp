@@ -39,7 +39,8 @@ namespace QuizApp.Data
             modelBuilder.Entity<Question>()
                 .HasOne(p => p.Answer)
                 .WithOne(a => a.Question)
-                .HasForeignKey<Answer>(a => a.QuestionId);
+                .HasForeignKey<Answer>(a => a.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Answer>()
                 .HasOne(a => a.MetaAnswer)
                 .WithMany(a => a.Answers)
