@@ -8,5 +8,6 @@
 		[x] GetAllCollections
 		[x] delete question
 	[x] Validator
+	[] Quiz
 [] Implement more auto mapper 
 [] apply the repository pattern

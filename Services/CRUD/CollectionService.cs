@@ -7,6 +7,7 @@ using QuizApp.Model.DTO.External;
 using QuizApp.Model.DTO.External.Resquest;
 using QuizApp.Model.DTO.Internal;
 using QuizApp.Services.ConcreteStrategies.MultipleChoice.Model.Domain;
+using QuizApp.Services.Extension.MultipleChoice.Model.DTO;
 using System.Text.Json;
 
 namespace QuizApp.Services.CRUD
@@ -69,8 +70,8 @@ namespace QuizApp.Services.CRUD
             try{
                 /* we can use a apply a strat selection here to parse the question*/
 #pragma warning disable CS8600 // already ensure questionWithAnswer.SerializedAnswer not null
-                MultipleChoiceQuestionAnswerDTO question = JsonSerializer
-                                                            .Deserialize<MultipleChoiceQuestionAnswerDTO>(questionWithAnswer.SerializedAnswer);
+                MultipleChoiceCreatedAnswerDTO answer = JsonSerializer
+                                                            .Deserialize<MultipleChoiceCreatedAnswerDTO>(questionWithAnswer.SerializedAnswer);
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
                 
                 // check if the collection exist
@@ -85,7 +86,7 @@ namespace QuizApp.Services.CRUD
                 var newQuestion = new Question
                 {
                     CollectionId = new Guid(serializedCollectionId),
-                    Value = question.Question,
+                    Value = questionWithAnswer.Question,
                     Level = MapIntToLevel(0),
                     LastRevision = DateOnly.FromDateTime(DateTime.Now)
                 };
@@ -99,8 +100,8 @@ namespace QuizApp.Services.CRUD
                         Value = JsonSerializer.Serialize(
                             new DatabaseMultiplechoiceAnswer
                             {
-                                Correct= question.Correct,
-                                Incorrect= question.Incorrect
+                                Correct= answer.Correct,
+                                Incorrect= answer.Incorrect
                             }
                             ),
                         Type = "MultipleChoice",

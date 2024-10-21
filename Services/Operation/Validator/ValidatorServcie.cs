@@ -83,7 +83,7 @@ namespace QuizApp.Services.Operation.Validator
                     }
                     else
                     {
-                        throw new InvalidOperationException("Validation strategy not found for this answer type.");
+                        return new BusinessToPresentationLayerDTO<ResponseValidatePayload>(false, "", ResponseValidatePayload.Default);
                     }
                 }
             }

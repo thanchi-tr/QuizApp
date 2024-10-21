@@ -78,7 +78,7 @@ namespace QuizApp.Controllers
 
             BusinessToPresentationLayerDTO<ResponseValidatePayload> result =  _validateService.Validate(abstractAttempt, CollectionId, QuestionId);
 
-            return (result.Status) ? Ok(result) :
+            return (result.Status) ? Ok(result.Data) :
                     (result.Message.Contains("Not found") ? NotFound() :
                     BadRequest());
         }   

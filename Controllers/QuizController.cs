@@ -22,9 +22,15 @@ namespace QuizApp.Controllers
         [HttpGet("{Id}/Quiz")]
         [SwaggerOperation(Summary = "Get quiz !",
             Description = "The quiz will include (0..n) question of multiple type ")]
-        [SwaggerResponse(200, "<Questions> is configured into a format that suit for question type /n"  
-            , typeof(TestDTO))]
-        [SwaggerResponse(404)]
+        [SwaggerResponse(
+            200,
+            "<Questions> is configured into a format that suit for question type /n",
+            ContentTypes = new[] { "application/json" },
+            Type = typeof(TestDTO))]
+        [SwaggerResponse(
+            400,
+            "Bad Request:: the serializedCollectionId is empty"
+        )]
         public IActionResult GetQuiz([SwaggerParameter(Description = "Serialized GUID of the Quiz.")] String Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -32,9 +38,7 @@ namespace QuizApp.Controllers
                 return BadRequest("ID cannot be null or empty");
             }
             var packet = _infoProvider.Get(Id);
-            return (packet != null)
-                    ? Ok(packet)
-                    : NotFound("Quiz not found");
+            return Ok(packet);
         }
 
 

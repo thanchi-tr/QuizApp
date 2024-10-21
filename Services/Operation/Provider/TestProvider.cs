@@ -46,10 +46,14 @@ namespace QuizApp.Services.Operation.Provider
 
         protected override void Process()
         {
-
+            if (_collection == null) {
+                return;
+            }
+            var collectionDTO = _mapper.Map<CollectionDTO>(_collection);
             _information = new TestDTO
             {
-                Title = JsonSerializer.Serialize(_mapper.Map<CollectionDTO>(_collection))
+                Title = collectionDTO.Name,
+                CollectionId = collectionDTO.CollectionId.ToString(),
             };
             foreach (var question in _questionWithAnswer)
             {
