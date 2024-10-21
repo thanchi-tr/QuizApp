@@ -2,6 +2,7 @@
 using QuizApp.Model.DTO;
 using QuizApp.Model.DTO.External;
 using QuizApp.Model.DTO.External.Resquest;
+using QuizApp.Model.DTO.Internal;
 using QuizApp.Services.Cache;
 using QuizApp.Services.ConcreteStrategies.MultipleChoice;
 using QuizApp.Services.ConcreteStrategies.MultipleChoice.Model.DTO;
@@ -28,23 +29,36 @@ namespace QuizApp.Services.Operation.Validator
 
 
         /// <summary>
+        /// Validate the abstract answer using its type.
+        /// @todo: implement the asynchronous behaviour
         /// </summary>
-        /// <param name="receiveAnswer"></param>
+        /// <param name="abstractAttempt"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public ResponseValidatePayload Validate(string serializedReceivedAnswer, string collectionId, string questionId)
+        public BusinessToPresentationLayerDTO<ResponseValidatePayload> Validate(SerializedAttemptDTO abstractAttempt, string collectionId, string questionId)
         {
-            var requestPayload = JsonSerializer
-                            .Deserialize<SerializedAttemptDTO>(serializedReceivedAnswer);
+            var missingProp = new List<string>();
+            if (string.IsNullOrEmpty(collectionId)) missingProp.Add("collectionId");
+            if (string.IsNullOrEmpty(questionId)) missingProp.Add("questionId");
+            if (missingProp.Count > 0)
+            {
+                return new BusinessToPresentationLayerDTO<ResponseValidatePayload>(false, "Missing neccesary Properties", ResponseValidatePayload.Default);
+
+            }
+
             // Check for missing detail
-            if (requestPayload == null
-                || !requestPayload.IsValid()) return ResponseValidatePayload.Default;
+            if (!abstractAttempt.IsValid()) 
+                return new BusinessToPresentationLayerDTO<ResponseValidatePayload>(false, "", ResponseValidatePayload.Default);
+
+            
 
             // get the data from cache
             var answer = _informationCache.Get(collectionId);
             if (answer == null)
             {
                 answer = _answerProvider.Get(collectionId);
+                if(answer == null)
+                    return new BusinessToPresentationLayerDTO<ResponseValidatePayload>(false, "Not found", ResponseValidatePayload.Default);
                 _informationCache.Cache(answer, collectionId);
             }
             // find the answer in the cache answer.
@@ -53,7 +67,7 @@ namespace QuizApp.Services.Operation.Validator
                 // obtain the actual structure of the answer acording to its type
                 // aka multiple choice
                 var correctAnswer = JsonSerializer.Deserialize<MultipleChoiceAnswerDTO>(serializedAnswer);
-                var attempt = JsonSerializer.Deserialize<MultipleChoiceAnswerDTO>(requestPayload.Answer);
+                var attempt = JsonSerializer.Deserialize<MultipleChoiceAnswerDTO>(abstractAttempt.Answer);
 
                 if (correctAnswer != null && attempt != null && // match their id
                     correctAnswer.QuestionId
@@ -65,7 +79,7 @@ namespace QuizApp.Services.Operation.Validator
                     var strategy = _serviceProvider.GetService(typeof(ValidateMultipleChoiceStrategy)) as IValidatingStrategy<MultipleChoiceAnswerDTO>;
                     if (strategy != null)
                     {
-                        return strategy.Validate(correctAnswer, requestPayload.Answer);
+                        return new BusinessToPresentationLayerDTO<ResponseValidatePayload>(true, "", strategy.Validate(correctAnswer, abstractAttempt.Answer));
                     }
                     else
                     {
@@ -73,7 +87,7 @@ namespace QuizApp.Services.Operation.Validator
                     }
                 }
             }
-            return ResponseValidatePayload.Default;
+            return new BusinessToPresentationLayerDTO<ResponseValidatePayload>(false, "Other", ResponseValidatePayload.Default);
 
         }
     }

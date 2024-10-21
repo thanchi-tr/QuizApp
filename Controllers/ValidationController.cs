@@ -2,6 +2,8 @@
 using QuizApp.Model.Domain;
 using QuizApp.Model.DTO;
 using QuizApp.Model.DTO.External;
+using QuizApp.Model.DTO.External.Resquest;
+using QuizApp.Model.DTO.Internal;
 using QuizApp.Services.Operation.Provider;
 using QuizApp.Services.Operation.Validator;
 using Swashbuckle.AspNetCore.Annotations;
@@ -71,12 +73,14 @@ namespace QuizApp.Controllers
             [SwaggerParameter(
                 Required=true, 
                 Description = "Expected Payload:Serialized JSON object with <CollectionId>, <Type>, <an attempt>")]
-                 string serializedAttemptDTO)
+                 SerializedAttemptDTO abstractAttempt)
         {
-            
-            ResponseValidatePayload result = _validateService.Validate(serializedAttemptDTO, CollectionId, QuestionId);
-            
-            return Ok();
+
+            BusinessToPresentationLayerDTO<ResponseValidatePayload> result =  _validateService.Validate(abstractAttempt, CollectionId, QuestionId);
+
+            return (result.Status) ? Ok(result) :
+                    (result.Message.Contains("Not found") ? NotFound() :
+                    BadRequest());
         }   
     }
     

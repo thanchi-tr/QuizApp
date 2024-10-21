@@ -1,4 +1,6 @@
 ﻿using QuizApp.Model.Domain;
+using Swashbuckle.AspNetCore.Annotations;
+using System.Text.Json.Serialization;
 
 namespace QuizApp.Model.DTO.External.Resquest
 {
@@ -7,10 +9,13 @@ namespace QuizApp.Model.DTO.External.Resquest
     /// </summary>
     public class SerializedAttemptDTO
     {
-        public string Type { get; set; } 
+        [SwaggerSchema(Description ="Type of the question, refer to the Format Api for the supported type")]
+        public string Type { get; set; }
         /// <summary>
         /// In the form of serialized( MultipleChoiceValidateAnswer)
         /// </summary>
+        [SwaggerSchema(Description ="An abstraction: where the object is being serialized into a string, actual type is dictate by the Type")]
+
         public string Answer { get; set; }
 
         /// <summary>

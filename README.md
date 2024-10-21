@@ -7,5 +7,6 @@
 		[x] create collection
 		[x] GetAllCollections
 		[x] delete question
+	[x] Validator
 [] Implement more auto mapper 
 [] apply the repository pattern

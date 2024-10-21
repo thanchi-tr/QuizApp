@@ -1,4 +1,6 @@
 ﻿using QuizApp.Model.DTO.External;
+using QuizApp.Model.DTO.External.Resquest;
+using QuizApp.Model.DTO.Internal;
 
 namespace QuizApp.Services.Operation.Validator
 {
@@ -9,7 +11,9 @@ namespace QuizApp.Services.Operation.Validator
         /// </summary>
         /// <param name="receiveAnswer"> String</param>
         /// <returns></returns>
-        public ResponseValidatePayload Validate(string serializedReceivedAnswer, string collectionId, string questionId)
-        ;
+        public BusinessToPresentationLayerDTO<ResponseValidatePayload> Validate(SerializedAttemptDTO abstractAttempt, string collectionId, string questionId);
+
+
+
     }
 }
