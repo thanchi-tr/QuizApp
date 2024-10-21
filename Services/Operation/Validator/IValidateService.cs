@@ -9,6 +9,7 @@ namespace QuizApp.Services.Operation.Validator
         /// </summary>
         /// <param name="receiveAnswer"> String</param>
         /// <returns></returns>
-        public ResponseValidatePayload Validate(string receiveAnswer);
+        public ResponseValidatePayload Validate(string serializedReceivedAnswer, string collectionId, string questionId)
+        ;
     }
 }

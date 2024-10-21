@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using QuizApp.Model.Domain;
 using QuizApp.Model.DTO;
+using QuizApp.Model.DTO.External.Resquest;
 using QuizApp.Services.CRUD;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Linq;
@@ -20,14 +21,19 @@ namespace QuizApp.Controllers
         private ICRUDService<CollectionDTO> _crudService { get; set; }
 
         [HttpGet("")]
-        [SwaggerOperation(Summary = "return the HttpPacket with body contain serialized CollectionDTO:{ CollectionId: Guid, Name: String }!",
+        [SwaggerOperation(Summary = "Return all the collections!",
             Description = "the Quiz only have the ID and name,; @todo: when introduce the edit functionality, make sure checking the userId matching")]
         [SwaggerResponse(200, "<Quiz/CollectionDTO> will be return  /n"
             , typeof(CollectionDTO))]
-        [SwaggerResponse(404)]
+        [SwaggerResponse(
+            404,
+            "Not found:: @todo when add user indicate that the user does not exist"
+        )]
         public async Task<IActionResult> GetAllCollections()
         {
-            return Ok(await _crudService.GetAllCollectionAsync());
+            return Ok(
+                (await _crudService.GetAllCollectionAsync()).Data // there will only be one type of data available (and probably server down error)
+            );
         }
 
 
@@ -59,21 +65,17 @@ namespace QuizApp.Controllers
             [FromBody] [SwaggerRequestBody(
             Required = true,
             Description = "Expected Payload: Json.Serialized(MultipleChoiceQuestionAnswerDTO) <-> string value of {\"Question\":string, \"Type\": string, \"Correct\": string, \"Incorrect\": string[]}"
-        )] string SerializedQuestionAnswerDTO,
+        )] string SerializedQuestionAnswerDTO, // allow for reuse the Route and let the controller inject the parsing strategy at run time
             string QuestionId)
         {
             
             //delegate the task to the service
             var result = await _crudService.EditQuestion(SerializedQuestionAnswerDTO, QuestionId);
-            if (result.Contains("Not found"))
-            {
-                return NotFound();
-            }
-            if (result.Length > 0)
-            {
-                return BadRequest();
-            }
-            return NoContent();
+            return
+                (result.Status) ? NoContent() :
+                (result.Message.Contains("Not found")) ? NotFound() :
+                BadRequest(result.Data);
+            
         }
 
 
@@ -84,52 +86,92 @@ namespace QuizApp.Controllers
             Summary = "Add question to an existed Collection",
             Description = "Take payload of Serialized MultipleChoiceQuestionAnswerDTO{\"Question\":string, \"Type\": string, \"Correct\": string, \"Incorrect\": string[]}"
         )]
-        public IActionResult CreateQuestion([FromBody] string question, string CollectionId)
+        [SwaggerResponse(
+            401,
+            "Unauthorized Request<@Todo@21-10-24>:: the Collection is not accessible by current user"
+        )]
+        [SwaggerResponse(
+            400,
+            "Bad Request:: Missing key property",
+            ContentTypes = new[] { "application/json" },
+            Type = typeof(string[])
+
+        )]
+        [SwaggerResponse(
+            404,
+            "Not found:: the Collection does not exist"
+        )]
+        [SwaggerResponse(
+            201,
+            "Successfully create the question and correspond answer"
+        )]
+        public async Task<IActionResult> CreateQuestion([FromBody] QuestionAnswerDTO questionWithAnswer, string CollectionId)
         {
-            if(string.IsNullOrEmpty(question))
-            {
-                return BadRequest();
-            }
+           
             //delegate the task to the service
-            var result =  _crudService.CreateQuestion(question, CollectionId);
-            return Ok();
+            var result =  await _crudService.CreateQuestion(questionWithAnswer, CollectionId);
+            return
+                (result.Status) ? Created() :
+                (result.Message.Equals("Not found")) ? NotFound() :
+                BadRequest(result.Data);
+
         }
+
 
         [HttpPost("Collection")]
         [SwaggerOperation(Summary ="Take payload that contain Name:string in the body")]
+        [SwaggerResponse(
+            401,
+            "Unauthorized Request<@Todo@21-10-24>:: the Collection is not accessible by current user"
+        )]
+        [SwaggerResponse(
+            400,
+            "Bad Request:: Missing key property name <- it is empty string",
+            ContentTypes = new[] { "application/json" },
+            Type = typeof(string[])
+
+        )]
+        [SwaggerResponse(
+            201,
+            "Created:: Collection has been successfully create without any error"
+        )]
         public async Task<IActionResult> CreateCollection([FromBody] string name)
         {
-            if (string.IsNullOrEmpty(name))
-            {
-                return await Task.FromResult(BadRequest("Collection name cannot be empty."));
-            }
-
-            try
-            {
-                // Simulate some async logic for creating the collection.
-                var status = await _crudService.CreateCollection(name);
-
-                // Return 'Created' with the URI to the new collection resource.
-                //return CreatedAtAction(nameof(GetCollection), new { id = collectionId }, new { id = collectionId, name = name });
-                return (status) ? Ok() : BadRequest();
-            }
-            catch (Exception ex)
-            {
-                // Log the exception and return a 500 error.
-                // In a real scenario, use proper logging mechanisms.
-                Console.WriteLine(ex.Message);
-                return StatusCode(500, "An error occurred while creating the collection.");
-            }
+            var result = await _crudService.CreateCollection(name);
+            return
+                (result.Status) ? Created() :
+                BadRequest(result.Data);
         }
 
 
-        [HttpDelete("/{CollectionId}/Questions/{QuestionId}")]
+        [HttpDelete("/Collection/Questions/{QuestionId}")]
         [SwaggerOperation(Summary = "Remove question from the collection")]
-        public async Task<bool> DeleteQuestion(string CollectionId, string QuestionId)
+        [SwaggerResponse(
+            401,
+            "Unauthorized:: the user does not have the policy @todo"
+        )]
+        [SwaggerResponse(
+            400,
+            "Bad Request:: Missing key prop",
+            ContentTypes = new[] { "application/json" },
+            Type = typeof(string[])
+        )]
+        [SwaggerResponse(
+            404,
+            "Not found:: The Question does not exist"
+        )]
+        [SwaggerResponse(
+            204,
+            "No Content:: The operation was successfull."
+        )]
+        public async Task<IActionResult> DeleteQuestion( string QuestionId)
         {
-            bool result = await _crudService.DeleteQuestion(CollectionId, QuestionId);
+            var result = await _crudService.DeleteQuestion( QuestionId);
 
-            return result;
+            return
+                (result.Status) ? NoContent() :
+                (result.Message.Contains("Not found")) ? NotFound() :
+                BadRequest(result.Data);
         }
 
     }

@@ -74,7 +74,7 @@ namespace QuizApp.Controllers
                  string serializedAttemptDTO)
         {
             
-            ResponseValidatePayload result = _validateService.Validate(serializedAttemptDTO);
+            ResponseValidatePayload result = _validateService.Validate(serializedAttemptDTO, CollectionId, QuestionId);
             
             return Ok();
         }   
