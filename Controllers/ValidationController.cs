@@ -24,18 +24,6 @@ namespace QuizApp.Controllers
             _validateService = validateService;
         }
 
-        //[HttpGet("Get/{id}")]
-        //public IActionResult GetQuiz([SwaggerParameter(Description = "Serialized GUID of the Quiz.")] String id)
-        //{
-        //    if (string.IsNullOrEmpty(id))
-        //    {
-        //        return BadRequest("ID cannot be null or empty");
-        //    }
-        //    var packet = _infoProvider.Get(id);
-        //    return (packet != null)
-        //            ? Ok(packet)
-        //            : NotFound("Quiz not found");
-        //}
 
         /// <summary>
         /// @todo: the method need to be revised in order to avoid nested json (since i already serialized parent json 

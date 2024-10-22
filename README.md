@@ -11,3 +11,5 @@
 	[] Quiz
 [] Implement more auto mapper 
 [] apply the repository pattern
+[] make the user Name unique
+[] Implement exception handling accross application especially in the gate way between controller and service
