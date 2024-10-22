@@ -39,11 +39,14 @@ namespace QuizApp.Services.CRUD
         /// get the list off all the DTO in the db
         /// </summary>
         /// <returns></returns>
-        public async Task<BusinessToPresentationLayerDTO<CollectionDTO[]>> GetAllCollectionAsync()
+        public async Task<BusinessToPresentationLayerDTO<CollectionDTO[]>> GetAllCollectionAsync(string requestorId)
         {
+            
             var rawList = await _context.Collections
                     .AsNoTracking()
+                    .Where(c => c.UserId == new Guid(requestorId))
                     .ToListAsync();
+
             var collectionDTOs = rawList
                     .Where(raw => raw != null)
                     .Select(raw => _mapper.Map<CollectionDTO>(raw))
@@ -57,9 +60,11 @@ namespace QuizApp.Services.CRUD
         /// 
         /// questionStr currently follow the MC CreateQuestionDTO request
         /// </summary>
-        /// <param name="question"></param>
+        /// <param name="questionWithAnswer"></param>
+        /// <param name="serializedCollectionId">string version of guid</param>
+        /// <param name="RequestorId">the person who make the request</param>
         /// <returns></returns>
-        public async Task<BusinessToPresentationLayerDTO<string>> CreateQuestion(QuestionAnswerDTO questionWithAnswer, string serializedCollectionId)
+        public async Task<BusinessToPresentationLayerDTO<string>> CreateQuestion(QuestionAnswerDTO questionWithAnswer, string serializedCollectionId, string RequestorId)
         {
             if (questionWithAnswer == null ||
                     string.IsNullOrEmpty(questionWithAnswer.Question) ||
@@ -73,17 +78,21 @@ namespace QuizApp.Services.CRUD
                 MultipleChoiceCreatedAnswerDTO answer = JsonSerializer
                                                             .Deserialize<MultipleChoiceCreatedAnswerDTO>(questionWithAnswer.SerializedAnswer);
 #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-                
+
                 // check if the collection exist
-                if(await _context.Collections
+                var target = await _context.Collections
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.CollectionId == new Guid(serializedCollectionId)) == null)
+                    .FirstOrDefaultAsync(c => c.CollectionId == new Guid(serializedCollectionId));
+                if(target == null)
                 {
                     return new BusinessToPresentationLayerDTO<string>(false, "Not found", "");
                 }
-
-                /*Todo move this into repository*/
-                var newQuestion = new Question
+                if(!target.UserId.ToString().Contains(RequestorId)) // user is not owner of collection, therefore have no right to edit it
+                {
+                    return new BusinessToPresentationLayerDTO<string>(false, "Un-authorise", "");
+                }
+                    /*Todo move this into repository*/
+                    var newQuestion = new Question
                 {
                     CollectionId = new Guid(serializedCollectionId),
                     Value = questionWithAnswer.Question,
@@ -126,7 +135,7 @@ namespace QuizApp.Services.CRUD
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public async Task<BusinessToPresentationLayerDTO<string>> CreateCollection(string name)
+        public async Task<BusinessToPresentationLayerDTO<string>> CreateCollection(string name, string requestorId)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -140,7 +149,7 @@ namespace QuizApp.Services.CRUD
                     //As of now, this is a dummy value.
                     // My intention is for this to be the creator of the quiz. who has the right to
                     // edit the quiz
-                    UserId = new Guid("2A8C2FD1-4443-4E0E-AC39-062F7C1C75D3")
+                    UserId = new Guid(requestorId) // requestor is authenticated (they exist in our db)
                 });
                 await _context.SaveChangesAsync();
                 return new BusinessToPresentationLayerDTO<string>(true, "", "");
@@ -157,19 +166,26 @@ namespace QuizApp.Services.CRUD
         /// </summary>
         /// <param name="questionId"></param>
         /// <returns></returns>
-        public async Task<BusinessToPresentationLayerDTO<string>> DeleteQuestion(string questionId)
+        public async Task<BusinessToPresentationLayerDTO<string>> DeleteQuestion(string questionId, string requestorId)
         {
             
             if (string.IsNullOrEmpty(questionId))
                 return new BusinessToPresentationLayerDTO<string>(false, "Missing Prop", "questionId");
-       
+
 
             // find the question we want to delete (eager loading with its answer)
             var target = await _context.Questions
+                .AsNoTracking()
+                .Include(q => q.Collection)
                 .Include(q => q.Answer)
                 .FirstOrDefaultAsync(q => q.QuestionId == new Guid(questionId));
+            
             if (target == null) {
                 return new BusinessToPresentationLayerDTO<string>(false, "Not found", "");
+            }
+            if (target.Collection.UserId.ToString().Contains(requestorId))
+            {
+                return new BusinessToPresentationLayerDTO<string>(false, "Un-authorize", "");
             }
             _context.Answers.Remove(target.Answer); // Delete all answers
             _context.Questions.Remove(target);      // Delete the question

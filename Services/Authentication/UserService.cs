@@ -55,11 +55,10 @@ namespace QuizApp.Services.Authentication
                 return new BusinessToPresentationLayerDTO<User>(false, "Not found", null);
             /*find the user:: @todo: abstract this logic into repository*/
 
-            var passwordHash = _hasher.HashPassword(password);
 
 
             
-            if ( !_validator.Verify(passwordHash, user.HashedPassword))
+            if ( !_validator.Verify(password, user.HashedPassword))
                 return new BusinessToPresentationLayerDTO<User>(false, "Non-Authorized", null);
             
             return new BusinessToPresentationLayerDTO<User>(true, "", user);
@@ -90,6 +89,7 @@ namespace QuizApp.Services.Authentication
                 UserName = userName,
                 HashedPassword = passHash
             };
+            await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
             /*create the user::@todo: abstract this logic into repository*/
 

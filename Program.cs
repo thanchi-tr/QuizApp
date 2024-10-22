@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using QuizApp.Data;
 using QuizApp.Model.Domain;
 using QuizApp.Model.DTO;
@@ -61,13 +62,13 @@ namespace QuizApp
                     };
                 });
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAllOrigins", policy =>
-                    policy.WithOrigins("http://localhost:3000/*") // indicate that we only interact with the policy with URL
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
-            });
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowAllOrigins", policy =>
+            //        policy.WithOrigins("https://localhost:5001/*") // indicate that we only interact with the policy with URL
+            //              .AllowAnyMethod()
+            //              .AllowAnyHeader());
+            //});
             // DB Context
             builder.Services.AddDbContext<IdeaSpaceDBContext>(
                 options => options.UseSqlServer(
@@ -101,10 +102,37 @@ namespace QuizApp
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(
-                c => c.EnableAnnotations() // enable Swagger Annotation    
-            );
+                opt => {
+                    opt.EnableAnnotations(); // enable Swagger Annotation    
+                    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "Quiz Backend", Version = "v1" });
+                    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                        {
+                            In = ParameterLocation.Header,
+                            Description = "Please enter token",
+                            Name = "Authorization",
+                            Type = SecuritySchemeType.Http,
+                            BearerFormat = "JWT",
+                            Scheme = "bearer"
+                        }
+                    );
+                    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type=ReferenceType.SecurityScheme,
+                                    Id="Bearer"
+                                }
+                            },
+                            new string[]{}
+                        }
+                    });
 
+                });
 
+            
             var app = builder.Build();
             if (app.Environment.IsDevelopment())
             {

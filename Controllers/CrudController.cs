@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using QuizApp.Model.Domain;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using QuizApp.Model.DTO;
 using QuizApp.Model.DTO.External.Resquest;
 using QuizApp.Services.CRUD;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Linq;
+using System.Security.Claims;
 
 namespace QuizApp.Controllers
 {
@@ -20,7 +19,9 @@ namespace QuizApp.Controllers
 
         private ICRUDService<CollectionDTO> _crudService { get; set; }
 
+
         [HttpGet("")]
+        [Authorize]
         [SwaggerOperation(Summary = "Return all the collections!",
             Description = "the Quiz only have the ID and name,; @todo: when introduce the edit functionality, make sure checking the userId matching")]
         [SwaggerResponse(200, "<Quiz/CollectionDTO> will be return  /n"
@@ -31,8 +32,9 @@ namespace QuizApp.Controllers
         )]
         public async Task<IActionResult> GetAllCollections()
         {
+            var requestorId = User.FindFirstValue("Sub"); // retain the userId from header
             return Ok(
-                (await _crudService.GetAllCollectionAsync()).Data // there will only be one type of data available (and probably server down error)
+                (await _crudService.GetAllCollectionAsync(requestorId)).Data // there will only be one type of data available (and probably server down error)
             );
         }
 
@@ -79,6 +81,7 @@ namespace QuizApp.Controllers
 
 
         [HttpPost("{CollectionId}/Questions/Question")]
+        [Authorize]
         [Consumes("application/json")]
         [Produces("application/json")]
         [SwaggerOperation(
@@ -87,7 +90,7 @@ namespace QuizApp.Controllers
         )]
         [SwaggerResponse(
             401,
-            "Unauthorized Request<@Todo@21-10-24>:: the Collection is not accessible by current user"
+            "Unauthorized Request:: Either the user is not authenticated, or User does not have the right to edit the collection"
         )]
         [SwaggerResponse(
             400,
@@ -106,22 +109,24 @@ namespace QuizApp.Controllers
         )]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionAnswerDTO questionWithAnswer, string CollectionId)
         {
-           
+            var requestorId = User.FindFirstValue("Sub"); //extract SerializedGUID from JWT
             //delegate the task to the service
-            var result =  await _crudService.CreateQuestion(questionWithAnswer, CollectionId);
+            var result =  await _crudService.CreateQuestion(questionWithAnswer, CollectionId, requestorId);
             return
                 (result.Status) ? Created() :
                 (result.Message.Equals("Not found")) ? NotFound() :
+                (result.Message.Contains("Un-authorise")) ? Unauthorized(new { message = "User does not have the right to edit collections" }) :
                 BadRequest(result.Data);
 
         }
 
 
         [HttpPost("Collection")]
+        [Authorize] 
         [SwaggerOperation(Summary ="Take payload that contain Name:string in the body")]
         [SwaggerResponse(
             401,
-            "Unauthorized Request<@Todo@21-10-24>:: the Collection is not accessible by current user"
+            "Unauthorized Request:: Action only available to who authenticated"
         )]
         [SwaggerResponse(
             400,
@@ -136,7 +141,8 @@ namespace QuizApp.Controllers
         )]
         public async Task<IActionResult> CreateCollection([FromBody] string name)
         {
-            var result = await _crudService.CreateCollection(name);
+            var requestorId = User.FindFirstValue("Sub");
+            var result = await _crudService.CreateCollection(name, requestorId);
             return
                 (result.Status) ? Created() :
                 BadRequest(result.Data);
@@ -144,10 +150,11 @@ namespace QuizApp.Controllers
 
 
         [HttpDelete("/Collection/Questions/{QuestionId}")]
+        [Authorize]
         [SwaggerOperation(Summary = "Remove question from the collection")]
         [SwaggerResponse(
             401,
-            "Unauthorized:: the user does not have the policy @todo"
+            "Unauthorized:: Need authenticate for userId"
         )]
         [SwaggerResponse(
             400,
@@ -165,11 +172,13 @@ namespace QuizApp.Controllers
         )]
         public async Task<IActionResult> DeleteQuestion( string QuestionId)
         {
-            var result = await _crudService.DeleteQuestion( QuestionId);
+            var requestorId = User.FindFirstValue("Sub"); // extract SerializedGUID from JWT
+            var result = await _crudService.DeleteQuestion( QuestionId, requestorId);
 
             return
                 (result.Status) ? NoContent() :
                 (result.Message.Contains("Not found")) ? NotFound() :
+                (result.Message.Contains("Un-authorize")) ? Unauthorized():
                 BadRequest(result.Data);
         }
 
