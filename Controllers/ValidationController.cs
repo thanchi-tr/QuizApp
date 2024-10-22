@@ -63,7 +63,7 @@ namespace QuizApp.Controllers
                 Description = "Expected Payload:Serialized JSON object with <CollectionId>, <Type>, <an attempt>")]
                  SerializedAttemptDTO abstractAttempt)
         {
-
+            /**/
             BusinessToPresentationLayerDTO<ResponseValidatePayload> result =  _validateService.Validate(abstractAttempt, CollectionId, QuestionId);
 
             return (result.Status) ? Ok(result.Data) :
