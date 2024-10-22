@@ -45,6 +45,8 @@ namespace QuizApp.Services.Authentication
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
                 return new BusinessToPresentationLayerDTO<User>(false, "Missing prop", null);
 
+            /* It is best practise to keep track of attempt and temporarily block this route and user for security*/
+
             /*find the user:: @todo: abstract this logic into repository*/
             var user = await _context.Users
                                 .AsNoTracking()

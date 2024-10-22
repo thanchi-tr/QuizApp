@@ -26,6 +26,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Controllers\NewFolder\" />
 	  <Folder Include="Model\RestfulResponsePayload\" />
 	  <Folder Include="Middleware\" />
 	  <Folder Include="Repository\" />

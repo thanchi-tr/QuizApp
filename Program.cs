@@ -37,6 +37,10 @@ namespace QuizApp
                 });
 
             });
+
+            var secretKey = builder.Configuration["JwtSettings:Secret"];
+            if (secretKey == null) // @todo: use OpenSSL to generate a new secret
+                return;
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
@@ -44,7 +48,6 @@ namespace QuizApp
             })
                 .AddJwtBearer(options =>
                 {
-                    var secretKey = builder.Configuration["JwtSettings:Secret"];
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true, // Validates the 'iss' claim

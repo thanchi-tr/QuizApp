@@ -4,9 +4,6 @@ namespace QuizApp.Services.Authentication.Token
 {
     public interface ITokenService
     {
-        public interface ITokenService
-        {
-            string GenerateToken(User user);
-        }
+        public string GenerateToken(User user);
     }
 }
