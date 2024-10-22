@@ -1,6 +1,6 @@
 ﻿namespace QuizApp.Services.Authentication.Util
 {
-    public class ConcretePasswordStrengthValidator : IPasswordStengthValidate
+    public class ConcretePasswordStrengthValidator : IValidate<String>
     {
         public bool Validate(string password)
         {

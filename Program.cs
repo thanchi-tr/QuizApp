@@ -1,14 +1,21 @@
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using QuizApp.Data;
+using QuizApp.Model.Domain;
 using QuizApp.Model.DTO;
 using QuizApp.Model.DTO.External;
+using QuizApp.Services.Authentication;
+using QuizApp.Services.Authentication.Token;
+using QuizApp.Services.Authentication.Util;
 using QuizApp.Services.Cache;
 using QuizApp.Services.ConcreteStrategies.MultipleChoice;
 using QuizApp.Services.ConcreteStrategies.MultipleChoice.Model.DTO;
 using QuizApp.Services.CRUD;
 using QuizApp.Services.Operation.Provider;
 using QuizApp.Services.Operation.Validator;
+using System.Text;
 
 namespace QuizApp
 {
@@ -17,7 +24,7 @@ namespace QuizApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            var jwtSettings = builder.Configuration.GetSection("JwtSettings"); // access the secret-store @jwtsetting. @todo: move to secret vault for better security during production
             // Add services to the container.
             // Override what specify in the properties/launchSettings.json
             builder.WebHost.ConfigureKestrel(options =>
@@ -30,6 +37,27 @@ namespace QuizApp
                 });
 
             });
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
+                {
+                    var secretKey = builder.Configuration["JwtSettings:Secret"];
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true, // Validates the 'iss' claim
+                        ValidateAudience = true, // Validates the 'aud' claim
+                        ValidateLifetime = true, // Validates the 'exp' and 'nbf' claims
+                        ValidateIssuerSigningKey = true, // Validates the token's signature
+                        ValidIssuer = jwtSettings["Issuer"],
+                        ValidAudience = jwtSettings["Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)), // chose symmetric security: (1) simplicity + performance (2) we dont need to share the key so the risk is minimal
+                        ClockSkew = TimeSpan.Zero // Removes default 5-minute clock skew
+                    };
+                });
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAllOrigins", policy =>
@@ -58,6 +86,14 @@ namespace QuizApp
             builder.Services.AddScoped<IValidatingStrategy<MultipleChoiceAnswerDTO>, ValidateMultipleChoiceStrategy>();
             builder.Services.AddScoped<ValidateMultipleChoiceStrategy>();
 
+            // Register Auth services:
+            builder.Services.AddTransient<IAuthService, UserService>();
+            builder.Services.AddTransient<ITokenService, TokenService>();
+            builder.Services.AddScoped<IValidate<String>, ConcretePasswordStrengthValidator> ( );
+            builder.Services.AddScoped<IValidate<User>, ConcreteUserNameValidator>();
+            builder.Services.AddScoped<IPasswordHash, BcryptHashPasswordAdapter>();
+            builder.Services.AddScoped<IPasswordVerificate, BcryptHashPasswordAdapter>();
+            
             builder.Services.AddScoped<ICRUDService<CollectionDTO>, CollectionService>();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

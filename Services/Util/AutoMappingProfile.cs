@@ -2,9 +2,9 @@
 using QuizApp.Model.Domain;
 using QuizApp.Model.DTO;
 
-namespace QuizApp.Util
+namespace QuizApp.Services.Util
 {
-    public class AutoMappingProfile: Profile
+    public class AutoMappingProfile : Profile
     {
         private int LevelToInt(Level level)
         {
@@ -40,8 +40,8 @@ namespace QuizApp.Util
 
 
             CreateMap<Question, QuestionDTO>()
-                .ForMember(dest => dest.Level,opt => opt.MapFrom(src => LevelToInt(src.Level))) 
-                .ForMember(dest => dest.Format,opt => opt.Ignore()); // we map the format by our self
+                .ForMember(dest => dest.Level, opt => opt.MapFrom(src => LevelToInt(src.Level)))
+                .ForMember(dest => dest.Format, opt => opt.Ignore()); // we map the format by our self
             CreateMap<QuestionDTO, Question>();
         }
     }

@@ -42,8 +42,7 @@ namespace QuizApp.Controllers
         [Produces("application/json")]
         [SwaggerOperation(
             Summary = "Edit Detail of Question with ID provided",
-            Description = "Take payload of Serialized Json apply it to the exist entry in SQL DB",
-            Tags = new[] { "Edit", "Crud", "Admin" }
+            Description = "Take payload of Serialized Json apply it to the exist entry in SQL DB"
             )]
         
         [SwaggerResponse(

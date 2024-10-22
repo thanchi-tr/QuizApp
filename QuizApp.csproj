@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>df23fbb3-859a-433f-85ce-df8324c8008e</UserSecretsId>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -26,6 +27,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Model\RestfulResponsePayload\" />
+	  <Folder Include="Middleware\" />
 	  <Folder Include="Repository\" />
 	  <Folder Include="Test\UnitTest\" />
 	</ItemGroup>

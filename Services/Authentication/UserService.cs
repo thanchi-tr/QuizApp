@@ -6,24 +6,28 @@ using QuizApp.Services.Authentication.Util;
 
 namespace QuizApp.Services.Authentication
 {
-    public class UserService
+    public class UserService : IAuthService
     {
 
         private readonly IdeaSpaceDBContext _context;
         private readonly IPasswordHash _hasher;
         private readonly IPasswordVerificate _validator;
-        private readonly IPasswordStengthValidate _stengthValidator;
+        private readonly IValidate<String> _stengthValidator;
+        private readonly IValidate<User> _userNameValidator;
 
         public UserService(IdeaSpaceDBContext context,
-                    IPasswordHash hasher,
-                    IPasswordVerificate validator,
-                    IPasswordStengthValidate stengthValidate)
+                            IPasswordHash hasher, 
+                            IPasswordVerificate validator,
+                            IValidate<String> stengthValidator,
+                            IValidate<User> userNameValidator)
         {
             _context = context;
             _hasher = hasher;
             _validator = validator;
-            _stengthValidator = stengthValidate;
+            _stengthValidator = stengthValidator;
+            _userNameValidator = userNameValidator;
         }
+
 
 
 
@@ -40,12 +44,14 @@ namespace QuizApp.Services.Authentication
 
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
                 return new BusinessToPresentationLayerDTO<User>(false, "Missing prop", null);
+
             /*find the user:: @todo: abstract this logic into repository*/
             var user = await _context.Users
                                 .AsNoTracking()
                                 .SingleOrDefaultAsync(u => u.UserName == userName);
             if(user == null)
                 return new BusinessToPresentationLayerDTO<User>(false, "Not found", null);
+            /*find the user:: @todo: abstract this logic into repository*/
 
             var passwordHash = _hasher.HashPassword(password);
 
@@ -57,10 +63,22 @@ namespace QuizApp.Services.Authentication
             return new BusinessToPresentationLayerDTO<User>(true, "", user);
         }
 
+        /// <summary>
+        /// Use 
+        ///     1. Password strength validator
+        ///     2. Username validator
+        /// if both of the data pass the validators then proceed to create the object
+        /// 22/10/24 @todo: abstract the db interaction into repository
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
         public async Task<BusinessToPresentationLayerDTO<User>> ResisterAsync(string userName, string password)
         {
             if(!_stengthValidator.Validate(password))
                 return new BusinessToPresentationLayerDTO<User>(false, "Weak password", null);
+            if(!_userNameValidator.Validate(userName))
+                return new BusinessToPresentationLayerDTO<User>(false, "In appriate username", null);
 
             var passHash = _hasher.HashPassword(password);
 
@@ -71,6 +89,9 @@ namespace QuizApp.Services.Authentication
                 HashedPassword = passHash
             };
             await _context.SaveChangesAsync();
+            /*create the user::@todo: abstract this logic into repository*/
+
+            return new BusinessToPresentationLayerDTO<User>(true, "", user);
 
         }
     }

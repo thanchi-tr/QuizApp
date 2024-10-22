@@ -1,6 +1,8 @@
-﻿namespace QuizApp.Services.Authentication.Util
+﻿using QuizApp.Model.Domain;
+
+namespace QuizApp.Services.Authentication.Util
 {
-    public class ConcreteUserNameValidator : IUserNameValidate
+    public class ConcreteUserNameValidator : IValidate<User>
     {
         public bool Validate(string username)
         {

@@ -56,7 +56,7 @@ namespace QuizApp.Data
 
             // some initial entry for debug
             modelBuilder.Entity<User>().HasData(
-                new User { UserId= new Guid("2a8c2fd1-4443-4e0e-ac39-062f7c1c75d3"), HashedUserName = "June", HashedPassword="test"}
+                new User { UserId= new Guid("2a8c2fd1-4443-4e0e-ac39-062f7c1c75d3"), UserName = "June", HashedPassword="test"}
             );
 
             modelBuilder.Entity<Collection>().HasData(
