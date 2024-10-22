@@ -5,19 +5,33 @@ Version 1:
 
 ## Tech stack:
 **Language**: C#
+
 **Framework**: Web API dotnet.
+
 **Authentication**:
+
 	custom JWT: _(could easily swap out for 3rd party IDaaS (e.g: Auth0))_
+
 	Key-type: _Symmetric <- simplicity, speed of development, Performance._
+
 	Hashing: _use BCrypt:: <utilize their Blowfish algo> since our app will have small scope a default cost factor (10 or 1024 iterations) is sufficient_
+
 	Secret: _generate using OpenSSL_
+
 	Currently: Not using any security model (not Role or Policy base yet @23/10/24)
+
 **Security**: Design follow zero trust architecture.
+
 **API Documentation**: SwagBuckle
+
 **Data Gateway**: Entity Framework Core(ORM) allow data access to MSSQL server. (No repository pattern yet)
+
 **Data Layer**: MSSQL DBMS
+
 **Dependancies**: consult the project solution
+
 **Test**: Not intergarate
+
 ## Requirement:
 [.NET SDK (Version 6 or later)](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) 
 [MsSQL server or any other SQL DBMS that support by EF core](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)

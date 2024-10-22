@@ -370,3 +370,4 @@ FodyWeavers.xsd
 # User Secrets
 **/.microsoft/usersecrets/
 *.usersecrets
+/QuizApp.csproj
