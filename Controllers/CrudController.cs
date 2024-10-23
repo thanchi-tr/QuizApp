@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using QuizApp.Model.Domain;
 using QuizApp.Model.DTO;
 using QuizApp.Model.DTO.External.Resquest;
 using QuizApp.Services.CRUD;
@@ -32,7 +33,9 @@ namespace QuizApp.Controllers
         )]
         public async Task<IActionResult> GetAllCollections()
         {
-            var requestorId = User.FindFirstValue("Sub"); // retain the userId from header
+            var requestorId = User.FindFirst("Sub")?.Value ??
+                            User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            
             return Ok(
                 (await _crudService.GetAllCollectionAsync(requestorId)).Data // there will only be one type of data available (and probably server down error)
             );
@@ -109,7 +112,9 @@ namespace QuizApp.Controllers
         )]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionAnswerDTO questionWithAnswer, string CollectionId)
         {
-            var requestorId = User.FindFirstValue("Sub"); //extract SerializedGUID from JWT
+            var requestorId = User.FindFirst("Sub")?.Value ??
+                            User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
             //delegate the task to the service
             var result =  await _crudService.CreateQuestion(questionWithAnswer, CollectionId, requestorId);
             return
@@ -141,7 +146,9 @@ namespace QuizApp.Controllers
         )]
         public async Task<IActionResult> CreateCollection([FromBody] string name)
         {
-            var requestorId = User.FindFirstValue("Sub");
+            var requestorId = User.FindFirst("Sub")?.Value ??
+                            User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
             var result = await _crudService.CreateCollection(name, requestorId);
             return
                 (result.Status) ? Created() :
@@ -172,7 +179,9 @@ namespace QuizApp.Controllers
         )]
         public async Task<IActionResult> DeleteQuestion( string QuestionId)
         {
-            var requestorId = User.FindFirstValue("Sub"); // extract SerializedGUID from JWT
+            var requestorId = User.FindFirst("Sub")?.Value ??
+                            User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
             var result = await _crudService.DeleteQuestion( QuestionId, requestorId);
 
             return

@@ -30,8 +30,10 @@
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()), // Subject
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName), // Unique name
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // JWT ID
-                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()) // Issued at
-                //,new Claim(ClaimTypes.Role, user.Role) // Role(user entity does not have role as in now) is a custome Claims that outside the JWT specification (IETF RFC 7519) @todo: implement role base authorization
+                new Claim(JwtRegisteredClaimNames.Iat, 
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                    ClaimValueTypes.Integer64), // Issued at
+                new Claim(ClaimTypes.Role, "tester") // Role(user entity does not have role as in now) is a custome Claims that outside the JWT specification (IETF RFC 7519) @todo: implement role base authorization
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -44,8 +46,9 @@
                 expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpiryMinutes"])),
                 signingCredentials: creds
             );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var tokenStr = new JwtSecurityTokenHandler().WriteToken(token);
+            Console.WriteLine($"Generated Token: {tokenStr}");
+            return tokenStr;
         }
     }
 

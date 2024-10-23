@@ -9,6 +9,8 @@ namespace QuizApp.Configurations
     {
         public static IServiceCollection ConfigureStrategy(this IServiceCollection services)
         {
+            /** @ can implement a strategy explorer: to find and automatically register the strate
+             */
             services.AddTransient<IExtractStrategy<Model.Domain.Question>, ExtractMultipleChoiceTestStrategy>();
             services.AddTransient<IExtractStrategy<Model.Domain.Answer>, ExtractMultipleChoiceAnswerStrategy>();
             services.AddScoped<IValidatingStrategy<MultipleChoiceAnswerDTO>, ValidateMultipleChoiceStrategy>();

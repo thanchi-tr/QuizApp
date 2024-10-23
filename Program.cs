@@ -1,7 +1,5 @@
 
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using QuizApp.Configurations;
 using QuizApp.Data;
@@ -41,12 +39,12 @@ namespace QuizApp
             });
             builder.Services.ConfigureDependancy(builder.Configuration);
             builder.Services.ConfigureCors();
-            builder.Services.ConfigureAuth(builder.Configuration);
             builder.Services.ConfigureService();
             builder.Services.ConfigureStrategy();
-            
+            builder.Services.ConfigureAuth(builder.Configuration);
+
             // DB Context
-            
+
 
             var app = builder.Build();
             if (app.Environment.IsDevelopment())

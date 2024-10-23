@@ -6,6 +6,7 @@ using QuizApp.Services.Authentication.Token;
 using QuizApp.Services.Authentication.Util;
 using QuizApp.Services.Authentication;
 using System.Text;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace QuizApp.Configurations
 {
@@ -31,12 +32,28 @@ namespace QuizApp.Configurations
                     {
                         ValidateIssuer = true, // Validates the 'iss' claim
                         ValidateAudience = true, // Validates the 'aud' claim
-                        ValidateLifetime = true, // Validates the 'exp' and 'nbf' claims
+                        ValidateLifetime = true, // Validates the 'exp' and 'nbf' claims:: make sure the token expiration is validated
                         ValidateIssuerSigningKey = true, // Validates the token's signature
                         ValidIssuer = jwtSettings["Issuer"],
                         ValidAudience = jwtSettings["Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)), // chose symmetric security: (1) simplicity + performance (2) we dont need to share the key so the risk is minimal
-                        ClockSkew = TimeSpan.Zero // Removes default 5-minute clock skew
+                        ClockSkew = TimeSpan.Zero, // Removes default 5-minute clock skew
+
+                        // Ensure only HmacSha256 is allowed <- align with our strate @see the Services/Authentication/Token/TokenService.cs::line 40
+                        ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 }
+                    };
+
+                    // Notify the client that their token has been expired
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnAuthenticationFailed = context =>
+                        {
+                            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                            {
+                                context.Response.Headers.Add("Token-Expired", "true");
+                            }
+                            return Task.CompletedTask;
+                        }
                     };
                 });
             services.AddSwaggerGen(

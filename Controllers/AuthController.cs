@@ -48,10 +48,10 @@ namespace QuizApp.Controllers
         )
         {
             var result = await _userService.AuthenticateAsync(attempt.UserName, attempt.Password);
-
+            var token = _tokenService.GenerateToken(result.Data);
             return
                 (result.Status) 
-                    ? Ok(_tokenService.GenerateToken(result.Data)) :
+                    ? Ok(token) :
                 (result.Message.Contains("Missing prop")) ? BadRequest(new { message = "Missing username / password" }) :
                 Unauthorized(new { message ="Fail attempt"});
         }
