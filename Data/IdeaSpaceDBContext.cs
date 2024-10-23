@@ -15,6 +15,8 @@ namespace QuizApp.Data
         public DbSet<MetaAnswer> MetaAnswers { get; set; }
         public DbSet<Answer> Answers { get; set; }
 
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -25,13 +27,20 @@ namespace QuizApp.Data
                 .Property(c => c.CollectionId).ValueGeneratedOnAdd();
             modelBuilder.Entity<Question>()
                 .Property(q => q.QuestionId).ValueGeneratedOnAdd();
-
+            modelBuilder.Entity<RefreshToken>()
+                .Property(r => r.RefreshTokenId).ValueGeneratedOnAdd();
+            
 
             // Add relation relationship using fluent api
             modelBuilder.Entity<Collection>() //a user have many has many quizes 
                 .HasOne(c => c.User)
                 .WithMany(c => c.Collections)
                 .HasForeignKey(c => c.UserId);
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithOne(u => u.RefreshToken)
+                .HasForeignKey<RefreshToken>(rt => rt.UserId)
+                .IsRequired();
             modelBuilder.Entity<Question>() // A collection/quiz can have multiple question
                 .HasOne(q => q.Collection)
                 .WithMany(q => q.Questions)

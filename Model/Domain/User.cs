@@ -17,5 +17,6 @@ namespace QuizApp.Model.Domain
         public string HashedPassword { get; set; }
 
         public ICollection<Collection> Collections { get; set; }
+        public virtual RefreshToken RefreshToken { get; set; }
     }
 }

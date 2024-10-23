@@ -66,7 +66,9 @@ the application is run on Https://localhost:5001 (only via with https)
 
 
 # TODO:
-[] change the serialized JSON [From body] into JSON [From body]
+[x] change the serialized JSON [From body] into JSON [From body]
+
+[] implement the refresh token
 
 [] Add Api documentation using Dotnet Core.Mvc to enable run time interfere
 
