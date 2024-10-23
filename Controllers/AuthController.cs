@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using QuizApp.Data;
+using QuizApp.Model.DTO.External.Response;
 using QuizApp.Model.DTO.External.Resquest;
 using QuizApp.Services.Authentication;
 using QuizApp.Services.Authentication.Token;
@@ -13,11 +15,13 @@ namespace QuizApp.Controllers
     {
         private readonly IAuthService _userService;
         private readonly ITokenService _tokenService;
+        private readonly IdeaSpaceDBContext _dbContext;
 
-        public AuthController(IAuthService userService, ITokenService tokenService  )
+        public AuthController(IAuthService userService, ITokenService tokenService , IdeaSpaceDBContext context)
         {
             _userService = userService;
             _tokenService = tokenService;
+            _dbContext = context;
         }
 
 
@@ -30,7 +34,9 @@ namespace QuizApp.Controllers
         )]
         [SwaggerResponse(
             200,
-            "OK:: authentication successfull, expect token to be return in payload"
+            "OK:: authentication successfull, expect token to be return in payload",
+            ContentTypes = new[] { "application/json" },
+            Type = typeof(TokenDTO)
         )]
         [SwaggerResponse(
             400,
@@ -48,10 +54,13 @@ namespace QuizApp.Controllers
         )
         {
             var result = await _userService.AuthenticateAsync(attempt.UserName, attempt.Password);
-            var token = _tokenService.GenerateToken(result.Data);
             return
-                (result.Status) 
-                    ? Ok(token) :
+                (result.Status)
+                    ? Ok(new TokenDTO{ 
+                        AccessToken = _tokenService.GenerateToken(result.Data),
+                        RefreshToken = await _tokenService.GenerateRefreshToken(result.Data, _dbContext)
+                    }
+                    ) :
                 (result.Message.Contains("Missing prop")) ? BadRequest(new { message = "Missing username / password" }) :
                 Unauthorized(new { message ="Fail attempt"});
         }
@@ -78,6 +87,17 @@ namespace QuizApp.Controllers
             return
                 (result.Status) ? Ok(_tokenService.GenerateToken(result.Data)) :
                 BadRequest(new { message = "Fail strength test" });
+        }
+
+
+
+        [HttpPost("Refresh")]
+        [Consumes("application/json")]
+        [Produces("application/json")]
+        public async Task<IActionResult> RefreshAccess([FromBody] TokenDTO TokenPair)
+        {
+            // validate the access token, then work from there 
+            return BadRequest();
         }
     }
 

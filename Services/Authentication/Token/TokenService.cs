@@ -5,6 +5,9 @@
     using Microsoft.IdentityModel.Tokens;
     using System.Text;
     using QuizApp.Model.Domain;
+    using System.Security.Cryptography;
+    using QuizApp.Data;
+    using Microsoft.EntityFrameworkCore;
 
     public class TokenService : ITokenService
     {
@@ -13,6 +16,49 @@
         public TokenService(IConfiguration configuration)
         {
             _configuration = configuration;
+        }
+
+        /// <summary>
+        /// Use a Crypto safe rng to generate a Refresh key
+        ///     each user will only have 1 key.
+        /// </summary>
+        /// <param name="user"> Domain(sql table) user</param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public async Task<String> GenerateRefreshToken(User user, IdeaSpaceDBContext context)
+        {
+            var randomNumber = new byte[64];
+                                    using (var rng = RandomNumberGenerator.Create())
+                                    {
+                                        rng.GetBytes(randomNumber);
+                                    }
+            /* @todo bring this into a repository:: add or update the refresh token
+             */
+            var rfToken = await context
+                    .RefreshTokens
+                    .FirstOrDefaultAsync(rfToken => rfToken.UserId == user.UserId);
+            if (rfToken == null) // first grant
+            {
+                rfToken = new RefreshToken
+                {
+                    UserId = user.UserId,
+                    IsRevoked = false,
+                    Expires = DateTime.UtcNow.AddDays(Convert.ToDouble(_configuration["JwtSettings:RefreshTokenExpirationDays"])),
+                    Created = DateTime.UtcNow,
+                    Token = Convert.ToBase64String(randomNumber),
+                };
+
+                context.RefreshTokens.Add(rfToken);
+                await context.SaveChangesAsync();
+                return rfToken.Token;
+            }
+
+            rfToken.Expires = DateTime.UtcNow.AddDays(Convert.ToDouble(_configuration["JwtSettings:RefreshTokenExpirationDays"]));
+            rfToken.Created = DateTime.UtcNow;
+            rfToken.IsRevoked = false;
+            rfToken.Token = Convert.ToBase64String(randomNumber);
+            await context.SaveChangesAsync();
+            return rfToken.Token;
         }
 
         /// <summary>
