@@ -39,6 +39,14 @@ namespace QuizApp.Services.Authentication
 
         /// <summary>
         /// Securely check if the user exist
+        /// 
+        ///     Current exploitable area: (1) use symmetric key to sign it
+        ///                               (2) the token does support encryption/decryption (potentially encrypt it using Asymmetric on the client to send)
+        ///                               
+        ///     potential improvement:
+        ///         (1) address the 2 point above
+        ///         (2) Logging and impose a overseeing function <- if the over head cost is justify
+        ///         (3) Key rotation::
         /// </summary>
         /// <param name="userName"></param>
         /// <param name="password"></param>
@@ -117,6 +125,44 @@ namespace QuizApp.Services.Authentication
                     true,
                     "",
                     newTokens);
+        }
+
+
+
+        /// <summary>
+        /// Revolk the Refresh token (there still be risk of the JWT be use - ignore it for now)
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public async Task<BusinessToPresentationLayerDTO<string>> LogOutAsync(string userId)
+        {
+            if(string.IsNullOrEmpty(userId))
+                return new BusinessToPresentationLayerDTO<string>
+                (
+                    false,
+                    "Bad request",
+                    ""
+                );
+            var rfToken = await _context.RefreshTokens
+                    .FirstAsync(token => token.UserId.Equals(new Guid(userId)));
+            if (rfToken != null)
+            {
+                rfToken.IsRevoked = true;
+                await _context.SaveChangesAsync(); 
+                return new BusinessToPresentationLayerDTO<string>
+                (
+                    true,
+                    "",
+                    ""
+                );
+            }
+            return new BusinessToPresentationLayerDTO<string>
+                (
+                    false,
+                    "Bad request",
+                    ""
+                );
         }
     }
 }

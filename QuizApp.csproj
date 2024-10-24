@@ -28,8 +28,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Model\RestfulResponsePayload\" />
 	  <Folder Include="Middleware\" />
+	  <Folder Include="Model\RestfulResponsePayload\" />
 	  <Folder Include="Repository\" />
 	  <Folder Include="Test\UnitTest\" />
 	</ItemGroup>

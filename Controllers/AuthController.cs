@@ -70,7 +70,7 @@ namespace QuizApp.Controllers
         [Produces("application/json")]
         [SwaggerResponse(
             200,
-            "OK:: Register successfull, expect token to be return in payload"
+            "Created:: Register successfull, expect token to be return in payload"
         )]
         [SwaggerResponse(
             400,
@@ -99,8 +99,8 @@ namespace QuizApp.Controllers
             "Un-authorize::The client missing/provide invalid credential"
         )]
         [SwaggerResponse(
-            200,
-            "Success:: Expect the new pair of token in body"
+            204,
+            "No Content:: Log out peacefully"
         )]
         public async Task<IActionResult> RefreshAccess()
         {
@@ -125,6 +125,32 @@ namespace QuizApp.Controllers
                     Unauthorized();
             }
             return Unauthorized();
+        }
+
+
+        [HttpPost("Logout")]
+        [Consumes("application/json")]
+        [Produces("application/json")]
+        [SwaggerResponse(
+            400,
+            "Bad Request::The client missing/provide invalid credential"
+        )]
+        [SwaggerResponse(
+            200,
+            "Success:: Expect the new pair of token in body"
+        )]
+        public async Task<IActionResult> LogOut()
+        {
+            var requestorId = User.FindFirst("Sub")?.Value ??
+                            User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            if (requestorId == null)
+            {
+                return BadRequest();
+            }
+            var result = await _userService.LogOutAsync(requestorId);
+
+            return (result.Status) ? NoContent() :
+                BadRequest();
         }
     }
 

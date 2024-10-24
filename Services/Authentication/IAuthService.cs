@@ -9,5 +9,7 @@ namespace QuizApp.Services.Authentication
         public Task<BusinessToPresentationLayerDTO<User>> AuthenticateAsync(string userName, string password);
         public Task<BusinessToPresentationLayerDTO<User>> ResisterAsync(string userName, string password);
         public Task<BusinessToPresentationLayerDTO<TokenDTO>> RefreshLogin(TokenDTO tokenPair);
+
+        public Task<BusinessToPresentationLayerDTO<string>> LogOutAsync(string userId);
     }
 }

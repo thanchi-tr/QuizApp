@@ -145,8 +145,10 @@
                                             );
 
                 if(userRfToken == null ||// The user_id in the accessToken is invalid
+                    userRfToken.IsRevoked == true || // refresh token is invalid due to userlog out
+
                     //                raw token                hash token
-                    !_infoHash.Verify(tokens.RefreshToken, userRfToken.Token) ) // invalid refresh token
+                    !_infoHash.Verify(tokens.RefreshToken, userRfToken.Token) ) // invalid refresh token due to miss match
                     return new TokenDTO
                     {
                         AccessToken = "",
