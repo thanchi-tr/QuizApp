@@ -1,21 +1,5 @@
 
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using QuizApp.Configurations;
-using QuizApp.Data;
-using QuizApp.Model.Domain;
-using QuizApp.Model.DTO;
-using QuizApp.Model.DTO.External;
-using QuizApp.Services.Authentication;
-using QuizApp.Services.Authentication.Token;
-using QuizApp.Services.Authentication.Util;
-using QuizApp.Services.Cache;
-using QuizApp.Services.ConcreteStrategies.MultipleChoice;
-using QuizApp.Services.ConcreteStrategies.MultipleChoice.Model.DTO;
-using QuizApp.Services.CRUD;
-using QuizApp.Services.Operation.Provider;
-using QuizApp.Services.Operation.Validator;
-using System.Text;
 
 namespace QuizApp
 {
@@ -24,7 +8,6 @@ namespace QuizApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            var jwtSettings = builder.Configuration.GetSection("JwtSettings"); // access the secret-store @jwtsetting. @todo: move to secret vault for better security during production
             // Add services to the container.
             // Override what specify in the properties/launchSettings.json
             builder.WebHost.ConfigureKestrel(options =>

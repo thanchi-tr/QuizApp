@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using QuizApp.Model.Domain;
 using QuizApp.Model.DTO;
 using QuizApp.Model.DTO.External.Resquest;
 using QuizApp.Services.CRUD;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Security.Claims;
 
 namespace QuizApp.Controllers
 {

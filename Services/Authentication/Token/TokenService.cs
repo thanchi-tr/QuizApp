@@ -8,14 +8,19 @@
     using System.Security.Cryptography;
     using QuizApp.Data;
     using Microsoft.EntityFrameworkCore;
+    using QuizApp.Model.DTO.External.Response;
+    using QuizApp.Services.Authentication.Util;
 
     public class TokenService : ITokenService
     {
+        private const string INVALID_TOKEN = "";
+        private IInfoHash _infoHash;
         private readonly IConfiguration _configuration;
 
-        public TokenService(IConfiguration configuration)
+        public TokenService(IConfiguration configuration, IInfoHash infoHash)
         {
             _configuration = configuration;
+            _infoHash = infoHash;
         }
 
         /// <summary>
@@ -52,13 +57,13 @@
                 await context.SaveChangesAsync();
                 return rfToken.Token;
             }
-
+            var rawRfToken = Convert.ToBase64String(randomNumber).Replace("==", "");
             rfToken.Expires = DateTime.UtcNow.AddDays(Convert.ToDouble(_configuration["JwtSettings:RefreshTokenExpirationDays"]));
             rfToken.Created = DateTime.UtcNow;
             rfToken.IsRevoked = false;
-            rfToken.Token = Convert.ToBase64String(randomNumber);
+            rfToken.Token = _infoHash.Hash(rawRfToken); // ofer extra security incase data leakage see the configure to see the actual hashing algo in place
             await context.SaveChangesAsync();
-            return rfToken.Token;
+            return rawRfToken;
         }
 
         /// <summary>
@@ -96,6 +101,81 @@
             Console.WriteLine($"Generated Token: {tokenStr}");
             return tokenStr;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tokens"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public async Task<TokenDTO> RefreshTokens(TokenDTO tokens, IdeaSpaceDBContext context)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            // check the token
+            try
+            {
+                var jwtSettings = _configuration.GetSection("JwtSettings");
+                var secretKey = _configuration["JwtSettings:Secret"];
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)); // use the same key for encrypt + decrypt
+                var validationParameters = new TokenValidationParameters
+                {
+                    // Provide the key or certificate needed for decryption
+                    IssuerSigningKey = key,
+                    ValidIssuer = jwtSettings["Issuer"],
+                    ValidAudience = jwtSettings["Audience"],
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = false,  // Since it's expired
+                };
+                var ExpiredAccessToken = tokenHandler // extract the token only if it satisfy the validation above
+                                            .ValidateToken(tokens.AccessToken,
+                                                            validationParameters,
+                                                            out SecurityToken validatedToken);
+
+
+
+                // Match the refresh token as one in data base.
+                var userRfToken = await context.RefreshTokens
+                                            .AsNoTracking()
+                                            .Include(rfToken => rfToken.User)
+                                            .FirstAsync(rfToken =>
+                                                rfToken.UserId == new Guid(ExpiredAccessToken.FindFirstValue("Sub") ??
+                                                                ExpiredAccessToken.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")
+                                                )
+                                            );
+
+                if(userRfToken == null ||// The user_id in the accessToken is invalid
+                    //                raw token                hash token
+                    !_infoHash.Verify(tokens.RefreshToken, userRfToken.Token) ) // invalid refresh token
+                    return new TokenDTO
+                    {
+                        AccessToken = "",
+                        RefreshToken = ""
+                    };
+
+                return new TokenDTO
+                {
+                    AccessToken = GenerateToken(userRfToken.User),
+                    RefreshToken = await GenerateRefreshToken(userRfToken.User, context)
+                };
+            }
+            catch (Exception ex)
+            {
+                // missing or incompatible token
+                Console.WriteLine("Add some Log to tell the repquest try to refresh token with a invalid AccessToken");
+            }
+
+            return new TokenDTO
+            {
+                AccessToken ="",
+                RefreshToken=""
+            };
+        }
+    
+        
+
+
     }
+
 
 }

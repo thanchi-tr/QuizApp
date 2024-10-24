@@ -94,10 +94,37 @@ namespace QuizApp.Controllers
         [HttpPost("Refresh")]
         [Consumes("application/json")]
         [Produces("application/json")]
-        public async Task<IActionResult> RefreshAccess([FromBody] TokenDTO TokenPair)
+        [SwaggerResponse(
+            401,
+            "Un-authorize::The client missing/provide invalid credential"
+        )]
+        [SwaggerResponse(
+            200,
+            "Success:: Expect the new pair of token in body"
+        )]
+        public async Task<IActionResult> RefreshAccess()
         {
-            // validate the access token, then work from there 
-            return BadRequest();
+            //optain the require token pairs
+            if(Request.Headers.TryGetValue("RefreshToken", out var refreshToken) && Request.Headers.TryGetValue("Authorization", out var bearer))
+            {
+                // extract the access token from bearer
+                var accessToken = bearer.ToString().Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    return Unauthorized();
+                }
+
+                var result = await _userService.RefreshLogin(new TokenDTO
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken
+                });
+                
+                return 
+                    (result.Status) ? Ok(result.Data):
+                    Unauthorized();
+            }
+            return Unauthorized();
         }
     }
 

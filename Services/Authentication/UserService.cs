@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Core;
+using Microsoft.EntityFrameworkCore;
 using QuizApp.Data;
 using QuizApp.Model.Domain;
+using QuizApp.Model.DTO.External.Response;
 using QuizApp.Model.DTO.Internal;
+using QuizApp.Services.Authentication.Token;
 using QuizApp.Services.Authentication.Util;
 
 namespace QuizApp.Services.Authentication
@@ -10,23 +13,24 @@ namespace QuizApp.Services.Authentication
     {
 
         private readonly IdeaSpaceDBContext _context;
-        private readonly IPasswordHash _hasher;
-        private readonly IPasswordVerificate _validator;
+        private readonly IHash _hasher;
         private readonly IValidate<String> _stengthValidator;
         private readonly IValidate<User> _userNameValidator;
+        private readonly ITokenService _tokenService;
 
         public UserService(IdeaSpaceDBContext context,
-                            IPasswordHash hasher, 
-                            IPasswordVerificate validator,
-                            IValidate<String> stengthValidator,
-                            IValidate<User> userNameValidator)
+                            IHash hasher,
+                            IValidate<string> stengthValidator, 
+                            IValidate<User> userNameValidator,
+                            ITokenService tokenService)
         {
             _context = context;
             _hasher = hasher;
-            _validator = validator;
             _stengthValidator = stengthValidator;
             _userNameValidator = userNameValidator;
+            _tokenService = tokenService;
         }
+
 
 
 
@@ -58,7 +62,7 @@ namespace QuizApp.Services.Authentication
 
 
             
-            if ( !_validator.Verify(password, user.HashedPassword))
+            if ( !_hasher.Verify(password, user.HashedPassword))
                 return new BusinessToPresentationLayerDTO<User>(false, "Non-Authorized", null);
             
             return new BusinessToPresentationLayerDTO<User>(true, "", user);
@@ -81,7 +85,7 @@ namespace QuizApp.Services.Authentication
             if(!_userNameValidator.Validate(userName))
                 return new BusinessToPresentationLayerDTO<User>(false, "In appriate username", null);
 
-            var passHash = _hasher.HashPassword(password);
+            var passHash = _hasher.Hash(password);
 
             /*create the user::@todo: abstract this logic into repository*/
             var user = new User
@@ -95,6 +99,24 @@ namespace QuizApp.Services.Authentication
 
             return new BusinessToPresentationLayerDTO<User>(true, "", user);
 
+        }
+
+
+        public async Task<BusinessToPresentationLayerDTO<TokenDTO>> RefreshLogin(TokenDTO tokenPair)
+        {
+            var newTokens = await _tokenService.RefreshTokens(tokenPair, _context);
+
+            if(string.IsNullOrEmpty(newTokens.AccessToken))
+                return new BusinessToPresentationLayerDTO<TokenDTO>(
+                    false,
+                    "Non-Authorized",
+                    new TokenDTO { AccessToken = "", RefreshToken = "" }
+                );
+
+            return new BusinessToPresentationLayerDTO<TokenDTO>(
+                    true,
+                    "",
+                    newTokens);
         }
     }
 }

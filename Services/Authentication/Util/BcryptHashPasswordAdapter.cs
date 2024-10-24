@@ -2,14 +2,17 @@
 
 namespace QuizApp.Services.Authentication.Util
 {
-    public class BcryptHashPasswordAdapter : IPasswordVerificate, IPasswordHash
+    /// <summary>
+    /// Hasing password
+    /// </summary>
+    public class BcryptHashPasswordAdapter : IHash
     {
         /// <summary>
         /// Allow for flexibility in swap out module
         /// </summary>
         /// <param name="password"></param>
         /// <returns></returns>
-        public string HashPassword(string password)
+        public string Hash(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);
         }

@@ -68,6 +68,14 @@ namespace QuizApp.Configurations
                         Scheme = "bearer"
                     }
                     );
+                    opt.AddSecurityDefinition("Refresher", new OpenApiSecurityScheme
+                    {
+                        In = ParameterLocation.Header,
+                        Name = "RefreshToken",
+                        Type = SecuritySchemeType.ApiKey,
+                        Description = "Enter your refresher token here."
+                    }
+                    );
                     opt.AddSecurityRequirement(new OpenApiSecurityRequirement
                     {
                         {
@@ -80,18 +88,30 @@ namespace QuizApp.Configurations
                                 }
                             },
                             new string[]{}
+                        },
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type=ReferenceType.SecurityScheme,
+                                    Id="Refresher"
+                                }
+                            },
+                            new string[]{}
                         }
                     });
-
-                });
+                    
+                }
+            );
             // Register Auth services:
             services.AddTransient<IAuthService, UserService>();
             services.AddTransient<ITokenService, TokenService>();
             services.AddScoped<IValidate<String>, ConcretePasswordStrengthValidator>();
             services.AddScoped<IValidate<User>, ConcreteUserNameValidator>();
-            services.AddScoped<IPasswordHash, BcryptHashPasswordAdapter>();
-            services.AddScoped<IPasswordVerificate, BcryptHashPasswordAdapter>();
-
+            services.AddScoped<IHash, BcryptHashPasswordAdapter>();
+            services.AddScoped<IInfoHash, HMACSHA256Hash>();
+            
             return services;
         }
     }
