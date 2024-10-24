@@ -10,17 +10,19 @@ Version 1:
 
 **Authentication**:
 
-	custom JWT: _(could easily swap out for 3rd party IDaaS (e.g: Auth0))_
 
-	Key-type: _Symmetric <- simplicity, speed of development, Performance._
+custom JWT: _(could easily swap out for 3rd party IDaaS (e.g: Auth0))_
+    + Short lived + Refresh token
 
-	Hashing: _use BCrypt:: <utilize their Blowfish algo> since our app will have small scope a default cost factor (10 or 1024 iterations) is sufficient_
+Key-type: _Symmetric <- simplicity, speed of development, Performance._
 
-	Secret: _generate using OpenSSL_
+Hashing<Password>: _use BCrypt:: <utilize their Blowfish algo> since our app will have small scope a default cost factor (10 or 1024 iterations) is sufficient_
+			
+Hashing<Other Info>: HMAC SHA256
 
-	Currently: Not using any security model (not Role or Policy base yet @23/10/24)
+Secret: _generate using OpenSSL_
 
-**Security**: Design follow zero trust architecture.
+Currently: Not using any security model (not Role or Policy base yet @23/10/24)
 
 **API Documentation**: SwagBuckle
 
@@ -65,6 +67,10 @@ Update-database
 the application is run on Https://localhost:5001 (only via with https)
 
 
+## Future Direction:
+I want to moving into a real-time quiz base game.
+In process of investigate Signal R< to use websocket:: Persist connection between player and server during a game   > (Proactor pattern <- better suit I/O heavy quiz application) to improve the game loop @front end <- that replace API call to check asnwer every frame end
+
 # TODO:
 [x] change the serialized JSON [From body] into JSON [From body]
 
@@ -104,4 +110,4 @@ the application is run on Https://localhost:5001 (only via with https)
 
 [] implement the login request count to detect mal-behaviour
 
-[] investigate the Reactor pattern for low latency game player machanism between the server and client
+[] investigate the Proactor pattern for low latency game player machanism between the server and client
