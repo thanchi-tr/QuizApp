@@ -19,19 +19,19 @@ namespace QuizApp.Services.Operation.Provider
         /// compute a correct answer)
         /// </summary>
         /// <param name="id"></param>
-        protected override void GetRawData(string id)
+        protected override async void GetRawData(string id)
         {
-            _collection = _context.Collections
-                .FirstOrDefault(q => q.CollectionId == new Guid(id));
+            _collection = await _context.Collections
+                .FirstOrDefaultAsync(q => q.CollectionId == new Guid(id));
 
             // obtain all the question
             if (_collection != null)
             {
-                foreach (var question in _context.Questions
+                foreach (var question in await _context.Questions
                     .AsNoTracking()
                     .Where(q => q.CollectionId == _collection.CollectionId)
                     .Include(q => q.Answer) // eager loading
-                    .ToList())
+                    .ToListAsync())
                 {
                     if (question != null && question.Answer != null)
                     {

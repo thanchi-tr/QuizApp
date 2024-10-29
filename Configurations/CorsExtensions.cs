@@ -6,10 +6,13 @@
         {
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowAllOrigins", policy =>
-                    policy.AllowAnyOrigin() // @Change this when ready to dev front
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
+                options.AddPolicy("AllowSpecificOrigin", policy =>
+                {
+                    policy.WithOrigins("http://localhost:3000") // Allow your frontend origin
+                          .AllowAnyMethod() // Allow any HTTP method (GET, POST, etc.)
+                          .AllowAnyHeader() // Allow any headers (e.g., Content-Type, Authorization)
+                          .AllowCredentials(); // If you need cookies or authorization headers
+                });
             });
 
             return services;

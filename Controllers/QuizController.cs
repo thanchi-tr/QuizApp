@@ -41,6 +41,8 @@ namespace QuizApp.Controllers
             return Ok(packet);
         }
 
+        
+
 
         [HttpGet("Questions/Answer/Format")]
         [SwaggerOperation(Summary = "Get the supported question format",

@@ -36,7 +36,7 @@ namespace QuizApp
                 app.UseSwaggerUI();
             }
 
-            app.UseCors("CorsPolicy");
+            app.UseCors("AllowSpecificOrigin");
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();

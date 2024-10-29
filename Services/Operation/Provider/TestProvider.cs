@@ -28,18 +28,18 @@ namespace QuizApp.Services.Operation.Provider
         /// <param name="id"> Serialized Guid of the collection</param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        protected override void GetRawData(string id)
+        protected override async void GetRawData(string id)
         {
-            _collection = _context.Collections
-                .FirstOrDefault(q => q.CollectionId == new Guid(id));
+            _collection = await _context.Collections
+                .FirstOrDefaultAsync(q => q.CollectionId == new Guid(id));
 
             if (_collection != null)
             {
-                _questionWithAnswer = _context.Questions
+                _questionWithAnswer = await _context.Questions
                     .AsNoTracking()
                     .Where(q => q.CollectionId == _collection.CollectionId)
                     .Include(q => q.Answer) // eager loading
-                    .ToList();
+                    .ToListAsync();
 
             }
         }

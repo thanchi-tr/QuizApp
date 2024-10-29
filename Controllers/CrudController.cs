@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QuizApp.Model.DTO;
+using QuizApp.Model.DTO.External;
 using QuizApp.Model.DTO.External.Resquest;
 using QuizApp.Services.CRUD;
 using Swashbuckle.AspNetCore.Annotations;
@@ -179,7 +180,11 @@ namespace QuizApp.Controllers
         {
             var requestorId = User.FindFirst("Sub")?.Value ??
                             User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
-
+            if(string.IsNullOrEmpty(requestorId))
+            {
+                // check thử xem nếu qua nameidentifier xuất hiện thì nó có nhảy vô if này ko?
+                Console.WriteLine("===========================================================================");
+            }
             var result = await _crudService.DeleteQuestion( QuestionId, requestorId);
 
             return
@@ -189,5 +194,7 @@ namespace QuizApp.Controllers
                 BadRequest(result.Data);
         }
 
+
+        
     }
 }
